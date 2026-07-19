@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avalon — Perebutan Takhta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0e18;
+    --bg-panel: #131a2b;
+    --bg-panel-2: #1a2338;
+    --gold: #c6a15b;
+    --gold-bright: #ecd291;
+    --parchment: #efe6d2;
+    --parchment-dim: #b9ae95;
+    --good: #3e8c7e;
+    --good-bright: #6fc2b0;
+    --evil: #9c2f3a;
+    --evil-bright: #d1616c;
+    --line: rgba(198,161,91,0.28);
+    --shadow: rgba(0,0,0,0.55);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 50% -10%, #1c2740 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 110%, #14192a 0%, transparent 60%),
+      var(--bg);
+    color: var(--parchment);
+    font-family: 'EB Garamond', serif;
+    min-height: 100vh;
+    display:flex;
+    justify-content:center;
+    padding: 28px 14px 60px;
+  }
+  #app{ width:100%; max-width: 620px; }
+  h1,h2,h3{ font-family:'Cinzel', serif; letter-spacing:0.03em; margin:0 0 8px; color: var(--gold-bright); font-weight:600;}
+  .title-decorative{ font-family:'Cinzel Decorative', serif; }
+  .eyebrow{ font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color: var(--parchment-dim); margin-bottom:6px;}
+  .panel{
+    background: linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 18px 40px var(--shadow);
+    position: relative;
+  }
+  .panel::before{
+    content:"";
+    position:absolute; inset:6px;
+    border:1px solid rgba(198,161,91,0.12);
+    border-radius:10px;
+    pointer-events:none;
+  }
+  .hero{ text-align:center; padding: 8px 4px 26px; }
+  .hero .crest{ font-size:44px; margin-bottom:10px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+  .hero p{ color: var(--parchment-dim); font-size:17px; line-height:1.5; max-width: 440px; margin: 6px auto 0; }
+  .btn{
+    font-family:'Cinzel', serif; font-size:14px; letter-spacing:0.05em;
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:#241b08; border:none; border-radius:8px; padding:13px 20px;
+    cursor:pointer; font-weight:600; text-transform:uppercase;
+    box-shadow: 0 6px 16px rgba(198,161,91,0.25);
+    transition: transform .12s ease, box-shadow .12s ease;
+    width:100%;
+  }
+  .btn:hover{ transform: translateY(-1px); box-shadow:0 8px 20px rgba(198,161,91,0.35); }
+  .btn:active{ transform: translateY(0px); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+  .btn.ghost{
+    background: transparent; color: var(--gold-bright); border:1px solid var(--line);
+    box-shadow:none;
+  }
+  .btn.evil{ background: linear-gradient(180deg, var(--evil-bright), var(--evil)); color:#2a0c0f; box-shadow:0 6px 16px rgba(156,47,58,0.3);}
+  .btn.good{ background: linear-gradient(180deg, var(--good-bright), var(--good)); color:#08221c; box-shadow:0 6px 16px rgba(62,140,126,0.3);}
+  .row{ display:flex; gap:10px; }
+  .row > *{ flex:1; }
+  .field{
+    display:flex; align-items:center; gap:8px; margin-bottom:10px;
+    background: rgba(0,0,0,0.2); border:1px solid var(--line); border-radius:8px; padding:8px 10px;
+  }
+  .field input[type=text]{
+    background:transparent; border:none; outline:none; color: var(--parchment);
+    font-family:'EB Garamond', serif; font-size:17px; width:100%; min-width:0;
+  }
+  .field .num{ font-family:'JetBrains Mono', monospace; color: var(--gold); font-size:13px; width:16px; flex-shrink:0;}
+  .icon-btn{
+    background:none; border:none; color:var(--evil-bright); font-size:18px; cursor:pointer; opacity:.7; line-height:1; flex-shrink:0;
+  }
+  .icon-btn:hover{ opacity:1; }
+  .bot-tag{
+    font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+    color: var(--parchment-dim); flex-shrink:0; display:flex; align-items:center; gap:5px; cursor:pointer;
+    padding:4px 8px; border-radius:6px; border:1px solid var(--line); user-select:none;
+  }
+  .bot-tag.active{ color: var(--gold-bright); border-color: var(--gold); background: rgba(198,161,91,0.12); }
+  .toggle-row{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+    padding: 12px 4px; border-bottom: 1px solid rgba(198,161,91,0.12);
+  }
+  .toggle-row:last-child{ border-bottom:none; }
+  .toggle-row .label{ font-family:'Cinzel', serif; font-size:14px; color:var(--parchment); }
+  .toggle-row .sub{ font-size:14px; color: var(--parchment-dim); line-height:1.4; margin-top:2px;}
+  .switch{ position:relative; width:44px; height:24px; flex-shrink:0; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{
+    position:absolute; cursor:pointer; inset:0; background:rgba(255,255,255,0.12);
+    border-radius:24px; transition:.2s; border:1px solid var(--line);
+  }
+  .slider::before{
+    content:""; position:absolute; height:16px; width:16px; left:3px; top:3px;
+    background: var(--parchment-dim); border-radius:50%; transition:.2s;
+  }
+  .switch input:checked + .slider{ background: rgba(198,161,91,0.5); }
+  .switch input:checked + .slider::before{ transform: translateX(20px); background: var(--gold-bright); }
+  .switch input:disabled + .slider{ opacity:.35; cursor:not-allowed; }
+  .divider{ height:1px; background: var(--line); margin: 18px 0; }
+  .small{ font-size:14px; color: var(--parchment-dim); }
+  .center{ text-align:center; }
+
+  /* Discussion Chat Box */
+  .chat-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    height: 180px;
+    overflow-y: auto;
+    padding: 12px;
+    margin: 14px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+  }
+  .chat-msg {
+    font-size: 15px;
+    line-height: 1.4;
+    animation: fadeIn 0.3s ease;
+  }
+  .chat-msg .sender {
+    font-family: 'Cinzel', serif;
+    color: var(--gold-bright);
+    font-weight: bold;
+    margin-right: 6px;
+  }
+  .chat-msg.bot .sender {
+    color: #8bb2f0;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Reveal card */
+  .pass-card{
+    text-align:center; padding: 50px 20px;
+  }
+  .pass-card .to{ font-size:26px; font-family:'Cinzel', serif; color:var(--gold-bright); margin: 10px 0 22px; }
+  .seal{
+    width:120px; height:120px; margin:0 auto 20px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 60%, #7a5f2c 100%);
+    display:flex; align-items:center; justify-content:center; font-size:46px;
+    box-shadow: 0 10px 30px rgba(198,161,91,0.35), inset 0 -6px 14px rgba(0,0,0,0.3);
+    cursor:pointer; user-select:none;
+  }
+  .role-card{
+    text-align:center; padding: 10px 6px 4px;
+  }
+  .role-badge{
+    display:inline-block; font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.14em;
+    padding:4px 12px; border-radius:20px; text-transform:uppercase; margin-bottom:14px;
+  }
+  .role-badge.good{ background: rgba(62,140,126,0.18); color: var(--good-bright); border:1px solid rgba(111,194,176,0.4);}
+  .role-badge.evil{ background: rgba(156,47,58,0.18); color: var(--evil-bright); border:1px solid rgba(209,97,108,0.4);}
+  .role-title{ font-size:32px; margin-bottom:14px; }
+  .role-desc{ font-size:17px; color: var(--parchment); line-height:1.5; margin-bottom:18px; }
+  .role-vision{
+    background: rgba(0,0,0,0.25); border:1px dashed var(--line); border-radius:10px;
+    padding:14px 16px; font-size:15px; color: var(--gold-bright); line-height:1.5; margin-bottom:6px;
+  }
+
+  /* Round table */
+  .table-wrap{ display:flex; justify-content:center; margin: 6px 0 22px; }
+  .round-table{
+    position:relative; width:280px; height:280px; border-radius:50%;
+    background: radial-gradient(circle at 40% 35%, #2a3450, #12182a 70%);
+    border: 2px solid var(--line);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.6), 0 12px 30px rgba(0,0,0,0.5);
+  }
+  .round-table .center-crest{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; text-align:center;
+  }
+  .round-table .center-crest .qi{ font-family:'Cinzel', serif; font-size:13px; color:var(--parchment-dim); letter-spacing:.08em;}
+  .round-table .center-crest .qn{ font-family:'Cinzel Decorative', serif; font-size:30px; color:var(--gold-bright); }
+  .seat{
+    position:absolute; width:58px; height:58px; margin-left:-29px; margin-top:-29px;
+    border-radius:50%; background: var(--bg-panel-2); border:2px solid var(--line);
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:'Cinzel', serif; font-size:10.5px; color: var(--parchment); padding:4px;
+    line-height:1.15;
+  }
+  .seat.leader{ border-color: var(--gold-bright); box-shadow: 0 0 0 3px rgba(198,161,91,0.25), 0 0 16px rgba(198,161,91,0.4); }
+  .seat.onteam{ border-color: var(--good-bright); background: rgba(62,140,126,0.25); }
+  .seat .crown{ position:absolute; top:-16px; font-size:14px; }
+
+  .quest-track{ display:flex; justify-content:center; gap:10px; margin: 4px 0 22px; flex-wrap:wrap; }
+  .shield{
+    width:46px; height:52px; position:relative; display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:600;
+    clip-path: polygon(50% 0%, 100% 18%, 100% 62%, 50% 100%, 0% 62%, 0% 18%);
+    background: rgba(255,255,255,0.06); border:1px solid var(--line); color: var(--parchment-dim);
+  }
+  .shield.success{ background: linear-gradient(180deg, var(--good-bright), var(--good)); color:#08221c; }
+  .shield.fail{ background: linear-gradient(180deg, var(--evil-bright), var(--evil)); color:#2a0c0f; }
+  .shield.current{ box-shadow:0 0 0 3px rgba(198,161,91,0.35); }
+  .shield .req{ position:absolute; bottom:-18px; font-size:10px; color:var(--parchment-dim); white-space:nowrap; }
+
+  .reject-track{ display:flex; justify-content:center; gap:6px; margin: 26px 0 6px; }
+  .reject-dot{ width:10px; height:10px; border-radius:50%; background: rgba(255,255,255,0.12); border:1px solid var(--line); }
+  .reject-dot.filled{ background: var(--evil-bright); }
+
+  .player-list{ display:flex; flex-direction:column; gap:8px; margin: 14px 0; }
+  .player-pick{
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:9px;
+    background: rgba(255,255,255,0.04); border:1px solid var(--line); cursor:pointer;
+    font-family:'Cinzel', serif; font-size:15px; color: var(--parchment);
+  }
+  .player-pick.selected{ background: rgba(62,140,126,0.2); border-color: var(--good-bright); color: var(--good-bright); }
+  .player-pick .box{ width:18px; height:18px; border-radius:4px; border:1px solid var(--line); flex-shrink:0; }
+  .player-pick.selected .box{ background: var(--good-bright); }
+
+  .vote-list{ display:flex; flex-direction:column; gap:8px; margin:14px 0 4px; }
+  .vote-row{
+    display:flex; justify-content:space-between; align-items:center; padding:10px 14px;
+    border-radius:8px; background: rgba(255,255,255,0.04); border:1px solid var(--line);
+    font-family:'Cinzel', serif; font-size:14px;
+  }
+  .pill{ font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:.08em; padding:3px 10px; border-radius:12px; text-transform:uppercase; }
+  .pill.approve{ background: rgba(62,140,126,0.2); color: var(--good-bright); }
+  .pill.reject{ background: rgba(156,47,58,0.2); color: var(--evil-bright); }
+
+  .banner{ text-align:center; padding: 6px 0 20px; }
+  .banner .crown-big{ font-size:52px; }
+  .banner h2{ font-size: 30px; margin: 10px 0 4px; }
+
+  .reveal-all{ display:flex; flex-direction:column; gap:8px; margin:16px 0; }
+  .reveal-row{
+    display:flex; justify-content:space-between; align-items:center; padding:10px 14px;
+    border-radius:8px; border:1px solid var(--line);
+  }
+  .reveal-row.good{ background: rgba(62,140,126,0.1); }
+  .reveal-row.evil{ background: rgba(156,47,58,0.1); }
+  .reveal-row .n{ font-family:'Cinzel', serif; }
+  .reveal-row .r{ font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:.06em; }
+
+  footer.hint{ text-align:center; margin-top:16px; color: var(--parchment-dim); font-size:13px; }
+  @media (max-width:420px){
+    .round-table{ width:240px; height:240px; }
+    .seat{ width:50px; height:50px; margin-left:-25px; margin-top:-25px; font-size:9.5px;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ===================== STATE ===================== */
+let state = {
+  phase: 'setup',
+  players: [
+    {name:'', isBot:false},
+    {name:'', isBot:false},
+    {name:'', isBot:false},
+    {name:'', isBot:false},
+    {name:'', isBot:false}
+  ],
+  optional: { percival:false, morgana:false, mordred:false, oberon:false },
+  rolesFull: [],
+  revealIndex: 0,
+  revealed: false,
+  leaderIndex: 0,
+  questIndex: 0,
+  questResults: [],
+  questLog: [],
+  rejectCount: 0,
+  proposedTeam: [],
+  votes: {},
+  voteOrder: [],
+  voteRevealIndex: 0,
+  currentVoterChoice: null,
+  questVotes: {},
+  questVoteOrder: [],
+  questVoteRevealIndex: 0,
+  assassinRevealed: false,
+  assassinBotPick: null,
+  discussionSeconds: 25,
+  discussionTimer: null,
+  chatMessages: [],
+  winner: null,
+  winReason: ''
+};
+
+const ROLE_INFO = {
+  'Merlin': {align:'good', desc:'Penyihir agung yang mengetahui wajah kejahatan, namun harus merahasiakan pengetahuannya — sang Assassin mengintai di kegelapan.'},
+  'Percival': {align:'good', desc:'Ksatria yang diberi penglihatan menuju Merlin, namun bayangan Morgana dapat menyesatkan pandangannya.'},
+  'Ksatria Setia Arthur': {align:'good', desc:'Rakyat setia Camelot yang hanya mengandalkan kejelian dan kata-kata sesama untuk menumpas pengkhianat.'},
+  'Assassin': {align:'evil', desc:'Pembunuh bayaran Mordred. Jika kebaikan memenangkan tiga misi, kaulah harapan terakhir kegelapan — tebaklah siapa Merlin.'},
+  'Morgana': {align:'evil', desc:'Penyihir kegelapan yang menyamar sebagai Merlin di mata Percival.'},
+  'Mordred': {align:'evil', desc:'Ksatria kegelapan yang identitasnya tersembunyi bahkan dari penglihatan Merlin.'},
+  'Oberon': {align:'evil', desc:'Roh liar yang bekerja sendiri — ia tak mengenal sekutunya, dan sekutunya tak mengenalnya.'},
+  'Antek Mordred': {align:'evil', desc:'Pengikut setia kegelapan, bersekutu erat dengan sesama antek Mordred.'}
+};
+
+const QUEST_TABLE = {
+  5:  [{size:2,fails:1},{size:3,fails:1},{size:2,fails:1},{size:3,fails:1},{size:3,fails:1}],
+  6:  [{size:2,fails:1},{size:3,fails:1},{size:4,fails:1},{size:3,fails:1},{size:4,fails:1}],
+  7:  [{size:2,fails:1},{size:3,fails:1},{size:3,fails:1},{size:4,fails:2},{size:4,fails:1}],
+  8:  [{size:3,fails:1},{size:4,fails:1},{size:4,fails:1},{size:5,fails:2},{size:5,fails:1}],
+  9:  [{size:3,fails:1},{size:4,fails:1},{size:4,fails:1},{size:5,fails:2},{size:5,fails:1}],
+  10: [{size:3,fails:1},{size:4,fails:1},{size:4,fails:1},{size:5,fails:2},{size:5,fails:1}]
+};
+
+function countsFor(n){
+  const t = {5:[3,2],6:[4,2],7:[4,3],8:[5,3],9:[6,3],10:[6,4]};
+  return {good:t[n][0], evil:t[n][1]};
+}
+
+/* ===================== HELPERS ===================== */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function playerName(i){ return state.players[i].name || `Pemain ${i+1}`; }
+function isBot(i){ return !!state.players[i].isBot; }
+function playerLabel(i){ return playerName(i) + (isBot(i) ? ' 🤖' : ''); }
+function el(html){ document.getElementById('app').innerHTML = html; }
+
+/* ===================== SETUP ===================== */
+function addPlayer(){
+  if(state.players.length >= 10) return;
+  state.players.push({name:'', isBot:false});
+  renderSetup();
+}
+function removePlayer(i){
+  if(state.players.length <= 5) return;
+  state.players.splice(i,1);
+  renderSetup();
+}
+function updateName(i,val){
+  state.players[i].name = val;
+}
+function toggleBot(i){
+  state.players[i].isBot = !state.players[i].isBot;
+  renderSetup();
+}
+function setSoloMode(){
+  state.players.forEach((p,i)=>{ p.isBot = (i!==0); });
+  renderSetup();
+}
+function setAllHuman(){
+  state.players.forEach(p=>{ p.isBot = false; });
+  renderSetup();
+}
+function toggleOptional(key){
+  const n = state.players.length;
+  const {good, evil} = countsFor(n);
+  if(key === 'percival'){
+    state.optional.percival = !state.optional.percival;
+    if(!state.optional.percival) state.optional.morgana = false;
+  } else if(key === 'morgana'){
+    if(!state.optional.morgana && !state.optional.percival){
+      state.optional.percival = true;
+    }
+    state.optional.morgana = !state.optional.morgana;
+  } else {
+    state.optional[key] = !state.optional[key];
+  }
+  const evilKeys = ['morgana','mordred','oberon'];
+  const activeEvil = evilKeys.filter(k=>state.optional[k]);
+  const limit = evil - 1;
+  if(activeEvil.length > limit){
+    state.optional[key] = false;
+  }
+  renderSetup();
+}
+
+function renderSetup(){
+  const n = state.players.length;
+  const {good, evil} = countsFor(n);
+  const evilSpecialActive = ['morgana','mordred','oberon'].filter(k=>state.optional[k]).length;
+  const evilSpecialLimit = evil - 1;
+  const canAddMoreEvil = evilSpecialActive < evilSpecialLimit;
+  const botCount = state.players.filter(p=>p.isBot).length;
+
+  const playersHtml = state.players.map((p,i)=>`
+    <div class="field">
+      <span class="num">${i+1}</span>
+      <input type="text" placeholder="Nama pemain ${i+1}" value="${p.name.replace(/"/g,'&quot;')}" oninput="updateName(${i}, this.value)">
+      <div class="bot-tag ${p.isBot?'active':''}" onclick="toggleBot(${i})">🤖 AI</div>
+      ${state.players.length>5 ? `<button class="icon-btn" onclick="removePlayer(${i})" title="Hapus">✕</button>` : ''}
+    </div>
+  `).join('');
+
+  el(`
+    <div class="hero">
+      <div class="crest title-decorative">⚔️</div>
+      <h1 class="title-decorative" style="font-size:34px;">AVALON</h1>
+      <p>Perebutan Takhta Camelot. Kumpulkan 5–10 ksatria di sekeliling satu perangkat — atau biarkan sang AI mengambil alih peran ksatria yang tak hadir.</p>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow">Para Ksatria (${n}/10) · ${good} kebaikan · ${evil} kejahatan ${botCount?`· ${botCount} dikendalikan AI`:''}</div>
+      ${playersHtml}
+      <div class="row" style="margin-top:6px;">
+        <button class="btn ghost" onclick="addPlayer()" ${n>=10?'disabled':''}>+ Tambah Pemain</button>
+        <button class="btn ghost" onclick="setSoloMode()">🤖 Mode Solo (kamu vs AI)</button>
+      </div>
+      ${botCount>0?`<button class="btn ghost" style="margin-top:8px;" onclick="setAllHuman()">Jadikan Semua Manusia</button>`:''}
+
+      <div class="divider"></div>
+      <div class="eyebrow">Peran Khusus</div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="label">Percival</div>
+          <div class="sub">Melihat Merlin — namun bisa disesatkan oleh Morgana.</div>
+        </div>
+        <label class="switch"><input type="checkbox" ${state.optional.percival?'checked':''} onchange="toggleOptional('percival')"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="label">Morgana</div>
+          <div class="sub">Menyamar sebagai Merlin di mata Percival. Mengaktifkan Percival otomatis.</div>
+        </div>
+        <label class="switch"><input type="checkbox" ${state.optional.morgana?'checked':''} ${(!state.optional.morgana && !canAddMoreEvil)?'disabled':''} onchange="toggleOptional('morgana')"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="label">Mordred</div>
+          <div class="sub">Kejahatan yang tersembunyi dari penglihatan Merlin.</div>
+        </div>
+        <label class="switch"><input type="checkbox" ${state.optional.mordred?'checked':''} ${(!state.optional.mordred && !canAddMoreEvil)?'disabled':''} onchange="toggleOptional('mordred')"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="label">Oberon</div>
+          <div class="sub">Kejahatan yang tak mengenal maupun dikenal sekutunya.</div>
+        </div>
+        <label class="switch"><input type="checkbox" ${state.optional.oberon?'checked':''} ${(!state.optional.oberon && !canAddMoreEvil)?'disabled':''} onchange="toggleOptional('oberon')"><span class="slider"></span></label>
+      </div>
+
+      <div class="divider"></div>
+      <button class="btn" onclick="beginGame()">Mulai Permainan</button>
+    </div>
+    <footer class="hint">Merlin &amp; Assassin selalu hadir dalam setiap permainan. Ketuk 🤖 AI pada baris pemain untuk menyerahkan kendalinya ke sang AI.</footer>
+  `);
+}
+
+function beginGame(){
+  const n = state.players.length;
+  if(n<5||n>10){ alert('Jumlah pemain harus 5–10 orang.'); return; }
+  for(let i=0;i<n;i++){ if(!state.players[i].name.trim()) state.players[i].name = `Pemain ${i+1}`; }
+
+  const {good, evil} = countsFor(n);
+  let goodRoles = ['Merlin'];
+  let evilRoles = ['Assassin'];
+  if(state.optional.percival) goodRoles.push('Percival');
+  if(state.optional.morgana) evilRoles.push('Morgana');
+  if(state.optional.mordred) evilRoles.push('Mordred');
+  if(state.optional.oberon) evilRoles.push('Oberon');
+  while(goodRoles.length < good) goodRoles.push('Ksatria Setia Arthur');
+  while(evilRoles.length < evil) evilRoles.push('Antek Mordred');
+
+  const pool = shuffle([
+    ...goodRoles.map(r=>({name:r, align:'good'})),
+    ...evilRoles.map(r=>({name:r, align:'evil'}))
+  ]);
+
+  state.rolesFull = pool;
+  state.phase = 'reveal';
+  state.revealIndex = 0;
+  state.revealed = false;
+  state.leaderIndex = Math.floor(Math.random()*n);
+  state.questIndex = 0;
+  state.questResults = [];
+  state.questLog = [];
+  state.rejectCount = 0;
+  renderReveal();
+}
+
+/* ===================== ROLE REVEAL ===================== */
+function computeInfo(idx){
+  const me = state.rolesFull[idx];
+  const others = state.rolesFull.map((r,i)=>({...r,i})).filter(o=>o.i!==idx);
+
+  if(me.name === 'Merlin'){
+    const seen = others.filter(o=> o.align==='evil' && o.name!=='Mordred').map(o=>playerName(o.i));
+    return seen.length ? `Kau melihat wajah-wajah kejahatan (Mordred, jika ada, bersembunyi dalam bayangan): <b>${seen.join(', ')}</b>` : 'Anehnya, tak ada kejahatan yang tampak olehmu.';
+  }
+  if(me.name === 'Percival'){
+    const merlin = others.find(o=>o.name==='Merlin');
+    const morgana = others.find(o=>o.name==='Morgana');
+    if(merlin && morgana){
+      const list = shuffle([playerName(merlin.i), playerName(morgana.i)]);
+      return `Dua sosok mengaku sebagai Merlin: <b>${list[0]}</b> dan <b>${list[1]}</b>. Satu tulus, satu menipu.`;
+    } else if(merlin){
+      return `Kau mengenali Merlin sang penyihir agung: <b>${playerName(merlin.i)}</b>.`;
+    }
+    return 'Penglihatanmu kabur kali ini — tak ada yang tampak.';
+  }
+  if(me.align === 'evil' && me.name !== 'Oberon'){
+    const seen = others.filter(o=>o.align==='evil' && o.name!=='Oberon').map(o=>playerName(o.i));
+    return seen.length ? `Sekutu kegelapanmu: <b>${seen.join(', ')}</b>` : 'Kau tak mengenali sekutu lain — kau berjalan sendiri.';
+  }
+  return 'Kau tidak memiliki penglihatan khusus. Percayalah pada instingmu.';
+}
+
+function renderReveal(){
+  let i = state.revealIndex;
+  const total = state.players.length;
+  while(i < total && isBot(i)){ i++; }
+  state.revealIndex = i;
+
+  if(i >= total){
+    state.phase = 'board';
+    renderBoard();
+    return;
+  }
+  if(!state.revealed){
+    el(`
+      <div class="panel pass-card">
+        <div class="eyebrow">Peran ${i+1} dari ${total}</div>
+        <div class="to">Serahkan ke ${playerName(i)}</div>
+        <div class="seal" onclick="doReveal()">🛡️</div>
+        <p class="small">Pastikan hanya ${playerName(i)} yang melihat layar, lalu ketuk lambang untuk membuka takdirmu.</p>
+      </div>
+    `);
+  } else {
+    const role = state.rolesFull[i];
+    const info = ROLE_INFO[role.name];
+    const vision = computeInfo(i);
+    el(`
+      <div class="panel role-card">
+        <div class="role-badge ${info.align}">${info.align==='good'?'Kebaikan · Camelot':'Kejahatan · Mordred'}</div>
+        <div class="role-title title-decorative">${role.name}</div>
+        <div class="role-desc">${info.desc}</div>
+        <div class="role-vision">${vision}</div>
+      </div>
+      <button class="btn" style="margin-top:16px;" onclick="nextReveal()">Rahasiakan &amp; Lanjutkan</button>
+    `);
+  }
+}
+function doReveal(){ state.revealed = true; renderReveal(); }
+function nextReveal(){ state.revealed = false; state.revealIndex++; renderReveal(); }
+
+/* ===================== BOT AI LOGIC ===================== */
+function computeSuspicion(i){
+  let score = 0;
+  for(const q of state.questLog){
+    if(q.team.includes(i)){
+      score += (q.result === 'fail') ? 3 : -1;
+    }
+    if(q.leader === i && q.result === 'fail') score += 2;
+  }
+  return score;
+}
+function computeMerit(i){
+  let score = 0;
+  for(const q of state.questLog){
+    if(q.team.includes(i)) score += (q.result === 'success') ? 2 : -1;
+    if(q.leader === i && q.result === 'success') score += 2;
+  }
+  return score;
+}
+function botSelectTeam(){
+  const n = state.players.length;
+  const size = QUEST_TABLE[n][state.questIndex].size;
+  const leaderIdx = state.leaderIndex;
+  const align = state.rolesFull[leaderIdx].align;
+  const allOthers = state.players.map((p,i)=>i).filter(i=>i!==leaderIdx);
+
+  if(align === 'good'){
+    const sorted = allOthers.slice().sort((a,b)=> computeSuspicion(a) - computeSuspicion(b));
+    return [leaderIdx, ...sorted.slice(0, size-1)];
+  } else {
+    const iAmOberon = state.rolesFull[leaderIdx].name === 'Oberon';
+    const evilAllies = iAmOberon ? [] : allOthers.filter(i=> state.rolesFull[i].align==='evil' && state.rolesFull[i].name!=='Oberon');
+    let team = [leaderIdx];
+    for(const e of shuffle(evilAllies)){
+      if(team.length >= size) break;
+      if(team.length < size) team.push(e);
+    }
+    const rest = allOthers.filter(i=>!team.includes(i)).sort((a,b)=> computeSuspicion(a)-computeSuspicion(b));
+    while(team.length < size && rest.length){ team.push(rest.shift()); }
+    return team.slice(0, size);
+  }
+}
+function botVoteApprove(voterIdx){
+  const align = state.rolesFull[voterIdx].align;
+  const team = state.proposedTeam;
+  if(align !== 'evil'){
+    const avgSusp = team.reduce((s,i)=>s+computeSuspicion(i),0) / team.length;
+    const threshold = 1 + state.rejectCount * 0.8;
+    let approve = avgSusp <= threshold;
+    if(Math.random() < 0.08) approve = !approve;
+    return approve;
+  } else {
+    const hasEvilOnTeam = team.some(i=> state.rolesFull[i].align==='evil');
+    if(hasEvilOnTeam) return true;
+    return Math.random() < 0.25;
+  }
+}
+function botQuestVoteSuccess(voterIdx){
+  const align = state.rolesFull[voterIdx].align;
+  if(align !== 'evil') return true;
+  const team = state.questVoteOrder;
+  const evilOnTeam = team.filter(i=> state.rolesFull[i].align==='evil').length;
+  let failProb = 0.7;
+  if(evilOnTeam > 1) failProb = 0.5;
+  if(state.questIndex >= 3) failProb = 0.9;
+  if(state.questResults.filter(r=>r==='fail').length >= 2) failProb = 1;
+  return Math.random() >= failProb;
+}
+function botAssassinPick(){
+  const candidates = state.rolesFull.map((r,i)=>i).filter(i=> state.rolesFull[i].align !== 'evil');
+  const sorted = candidates.slice().sort((a,b)=> computeMerit(b) - computeMerit(a));
+  const top = sorted.slice(0, Math.min(2, sorted.length));
+  return top[Math.floor(Math.random()*top.length)];
+}
+
+/* AI DIALOG CHAT GENERATOR */
+function generateBotChatMessage() {
+  const bots = state.players.map((p, i) => ({ ...p, i })).filter(p => p.isBot);
+  if (!bots.length) return;
+  
+  const selectedBot = bots[Math.floor(Math.random() * bots.length)];
+  const botIdx = selectedBot.i;
+  const align = state.rolesFull[botIdx].align;
+  const roleName = state.rolesFull[botIdx].name;
+  
+  const leaderName = playerName(state.leaderIndex);
+  const onTeam = state.proposedTeam.includes(botIdx);
+  
+  let messages = [];
+  
+  if (align === 'good') {
+    if (onTeam) {
+      messages = [
+        `Saya ikut di tim ini, percayalah misi ini akan sukses! ✨`,
+        `Terima kasih ${leaderName} sudah percaya dengan saya. Saya 100% loyal Camelot!`,
+        `Mari kita setujui tim ini demi kebaikan bersama.`
+      ];
+    } else {
+      messages = [
+        `Kenapa saya tidak diajak oleh ${leaderName}? Apakah ada antek kegelapan di tim itu? 🤔`,
+        `Saya merasa tim pilihan ${leaderName} ini agak mencurigakan...`,
+        `Hati-hati, perhatikan siapa saja yang masuk ke dalam tim.`
+      ];
+    }
+    // Jika ada misi gagal sebelumnya
+    if (state.questResults.includes('fail')) {
+      messages.push(`Ingat kawan, jangan sampai penyusup merusak misi kita lagi!`);
+    }
+  } else {
+    // Pihak Jahat (Evil) mencoba menipu atau memprovokasi
+    if (onTeam) {
+      messages = [
+        `Tenang saja, tim ini sangat aman. Saya dukung penuh!`,
+        `Bagus ${leaderName}, komposisi tim ini sudah sangat mantap.`,
+        `Jangan buang-buang kesempatan, mari kita jalankan misi!`
+      ];
+    } else {
+      messages = [
+        `Kok nama saya dilewati? ${leaderName} curiga dengan ksatria jujur seperti saya? 😤`,
+        `Saya curiga ada agenda tersembunyi di balik susunan ksatria ini.`,
+        `Lebih baik kita tolak tim ini dan cari opsi yang lebih meyakinkan.`
+      ];
+    }
+  }
+  
+  const text = messages[Math.floor(Math.random() * messages.length)];
+  state.chatMessages.push({ sender: playerLabel(botIdx), text: text, isBot: true });
+  
+  // Batasi histori chat maksimal 8 baris
+  if (state.chatMessages.length > 8) state.chatMessages.shift();
+}
+
+/* ===================== BOARD ===================== */
+function seatPositions(n, radius){
+  const pos = [];
+  for(let i=0;i<n;i++){
+    const angle = (i/n) * 2*Math.PI - Math.PI/2;
+    pos.push({ x: 140 + radius*Math.cos(angle), y: 140 + radius*Math.sin(angle) });
+  }
+  return pos;
+}
+
+function renderRoundTable(highlightTeam){
+  const n = state.players.length;
+  const pos = seatPositions(n, 108);
+  const seats = state.players.map((p,i)=>{
+    const isLeader = i===state.leaderIndex;
+    const onTeam = highlightTeam && state.proposedTeam.includes(i);
+    return `<div class="seat ${isLeader?'leader':''} ${onTeam?'onteam':''}" style="left:${pos[i].x}px; top:${pos[i].y}px;">
+      ${isLeader?'<div class="crown">👑</div>':''}
+      ${playerLabel(i)}
+    </div>`;
+  }).join('');
+  return `
+    <div class="table-wrap">
+      <div class="round-table">
+        <div class="center-crest">
+          <div class="qi">MISI</div>
+          <div class="qn">${Math.min(state.questIndex+1,5)} / 5</div>
+        </div>
+        ${seats}
+      </div>
+    </div>
+  `;
+}
+
+function renderQuestTrack(){
+  const n = state.players.length;
+  const table = QUEST_TABLE[n];
+  const shields = table.map((q,i)=>{
+    let cls='shield';
+    if(state.questResults[i]==='success') cls+=' success';
+    if(state.questResults[i]==='fail') cls+=' fail';
+    if(i===state.questIndex) cls+=' current';
+    const symbol = state.questResults[i]==='success' ? '✓' : state.questResults[i]==='fail' ? '✕' : q.size;
+    return `<div class="${cls}">${symbol}<span class="req">${q.fails>1?'2 gagal':''}</span></div>`;
+  }).join('');
+  return `<div class="quest-track">${shields}</div>`;
+}
+
+function renderRejectTrack(){
+  let dots='';
+  for(let i=0;i<5;i++){ dots+= `<div class="reject-dot ${i<state.rejectCount?'filled':''}"></div>`; }
+  return `<div class="reject-track">${dots}</div><p class="small center">Penolakan beruntun: ${state.rejectCount}/5 — 5 penolakan memenangkan kejahatan.</p>`;
+}
+
+function renderBoard(){
+  const n = state.players.length;
+  const table = QUEST_TABLE[n][state.questIndex];
+  el(`
+    <div class="hero" style="padding-bottom:6px;">
+      <div class="eyebrow">Ronde Kepemimpinan</div>
+      <h2>${playerLabel(state.leaderIndex)} memimpin</h2>
+    </div>
+    <div class="panel">
+      ${renderRoundTable(false)}
+      ${renderQuestTrack()}
+      ${renderRejectTrack()}
+      <div class="divider"></div>
+      <p class="small center">Misi ini membutuhkan <b style="color:var(--gold-bright)">${table.size} ksatria</b>${table.fails>1?' · butuh 2 suara gagal untuk menggagalkan misi':''}.</p>
+      <button class="btn" onclick="openTeamSelect()">${isBot(state.leaderIndex) ? '🤖 Biarkan AI Memilih Tim' : `Serahkan ke ${playerName(state.leaderIndex)} untuk Memilih Tim`}</button>
+    </div>
+  `);
+}
+
+/* ===================== TEAM SELECT ===================== */
+function openTeamSelect(){
+  state.proposedTeam = [];
+  state.phase = 'team';
+  if(isBot(state.leaderIndex)){
+    state.proposedTeam = botSelectTeam();
+    renderBotTeamAnnounce();
+  } else {
+    renderTeamSelect();
+  }
+}
+function renderBotTeamAnnounce(){
+  const n = state.players.length;
+  const size = QUEST_TABLE[n][state.questIndex].size;
+  const list = state.proposedTeam.map(i=>`<div class="player-pick selected"><div class="box"></div> ${playerLabel(i)}</div>`).join('');
+  el(`
+    <div class="hero" style="padding-bottom:6px;">
+      <div class="eyebrow">🤖 ${playerLabel(state.leaderIndex)} Memilih Tim</div>
+      <h2>Tim untuk misi ${state.questIndex+1}</h2>
+    </div>
+    <div class="panel">
+      <div class="player-list">${list}</div>
+      <button class="btn" onclick="openDiscussion()">Surat Telah Diantar — Lanjutkan</button>
+    </div>
+  `);
+}
+
+/* ===================== DISCUSSION ===================== */
+function formatTime(s){
+  const m = Math.floor(s/60);
+  const sec = s%60;
+  return `${m}:${sec.toString().padStart(2,'0')}`;
+}
+function openDiscussion(){
+  if(state.discussionTimer) clearInterval(state.discussionTimer);
+  state.phase = 'discussion';
+  state.discussionSeconds = 25; // Dipercepat agar chat terasa aktif dan intens
+  state.chatMessages = [];
+  
+  // Trigger pesan pertama langsung saat diskusi dibuka
+  generateBotChatMessage();
+  renderDiscussion();
+  
+  state.discussionTimer = setInterval(()=>{
+    state.discussionSeconds--;
+    
+    // Setiap 3 detik sekali, ada probabilitas AI mengirim pesan baru ke grup
+    if (state.discussionSeconds % 3 === 0 && Math.random() < 0.75) {
+      generateBotChatMessage();
+    }
+    
+    if(state.discussionSeconds <= 0){
+      clearInterval(state.discussionTimer);
+      state.discussionTimer = null;
+      confirmTeam();
+    } else {
+      renderDiscussion();
+    }
+  }, 1000);
+}
+function renderDiscussion(){
+  const list = state.proposedTeam.map(i=>`<div class="player-pick selected"><div class="box"></div> ${playerLabel(i)}</div>`).join('');
+  
+  const chatHtml = state.chatMessages.map(m => `
+    <div class="chat-msg ${m.isBot ? 'bot' : ''}">
+      <span class="sender">${m.sender}:</span>
+      <span class="text">${m.text}</span>
+    </div>
+  `).join('');
+
+  el(`
+    <div class="hero" style="padding-bottom:6px;">
+      <div class="eyebrow">Surat Telah Diantar</div>
+      <h2>Waktunya Berdiskusi</h2>
+    </div>
+    <div class="panel center">
+      <div class="player-list" style="text-align:left;">${list}</div>
+      
+      <div class="eyebrow" style="text-align:left; margin-top:12px;">Forum Diskusi AI & Ksatria:</div>
+      <div class="chat-box" id="chatBox">
+        ${chatHtml || '<p class="small center" style="margin:auto;">Menunggu ksatria bersuara...</p>'}
+      </div>
+      
+      <div style="font-family:'JetBrains Mono', monospace; font-size:38px; color:var(--gold-bright); margin:14px 0;">${formatTime(state.discussionSeconds)}</div>
+      <p class="small">Bicarakan susunan tim ini. Perhatikan argumen dari ksatria AI!</p>
+      <button class="btn" style="margin-top:14px;" onclick="skipDiscussion()">Lewati Diskusi &amp; Mulai Voting</button>
+    </div>
+  `);
+  
+  // Auto scroll ke bawah chat box
+  const box = document.getElementById('chatBox');
+  if(box) box.scrollTop = box.scrollHeight;
+}
+function skipDiscussion(){
+  if(state.discussionTimer){ clearInterval(state.discussionTimer); state.discussionTimer = null; }
+  confirmTeam();
+}
+function toggleTeamMember(i){
+  const n = state.players.length;
+  const size = QUEST_TABLE[n][state.questIndex].size;
+  const idx = state.proposedTeam.indexOf(i);
+  if(idx>=0){ state.proposedTeam.splice(idx,1); }
+  else {
+    if(state.proposedTeam.length >= size) return;
+    state.proposedTeam.push(i);
+  }
+  renderTeamSelect();
+}
+function renderTeamSelect(){
+  const n = state.players.length;
+  const size = QUEST_TABLE[n][state.questIndex].size;
+  const list = state.players.map((p,i)=>{
+    const sel = state.proposedTeam.includes(i);
+    return `<div class="player-pick ${sel?'selected':''}" onclick="toggleTeamMember(${i})">
+      <div class="box"></div> ${playerLabel(i)}
+    </div>`;
+  }).join('');
+  el(`
+    <div class="hero" style="padding-bottom:6px;">
+      <div class="eyebrow">Pilih Tim · ${playerName(state.leaderIndex)}</div>
+      <h2>Pilih ${size} ksatria untuk misi ini</h2>
+    </div>
+    <div class="panel">
+      <div class="player-list">${list}</div>
+      <p class="small center">Terpilih: ${state.proposedTeam.length}/${size}</p>
+      <button class="btn" ${state.proposedTeam.length!==size?'disabled':''} onclick="openDiscussion()">Ajukan Tim</button>
+    </div>
+  `);
+}
+
+/* ===================== VOTE (approve/reject team) ===================== */
+function confirmTeam(){
+  state.votes = {};
+  state.voteOrder = state.players.map((p,i)=>i);
+  state.voteRevealIndex = 0;
+  state.currentVoterChoice = null;
+  state.phase = 'vote-collect';
+  renderVoteCollect();
+}
+function renderVoteCollect(){
+  let i = state.voteRevealIndex;
+  const total = state.voteOrder.length;
+  while(i < total){
+    const voterIdx = state.voteOrder[i];
+    if(isBot(voterIdx)){
+      state.votes[voterIdx] = botVoteApprove(voterIdx);
+      i++;
+      continue;
+    }
+    break;
+  }
+  state.voteRevealIndex = i;
+
+  if(i >= total){
+    state.phase = 'vote-result';
+    renderVoteResult();
+    return;
+  }
+  const voterIdx = state.voteOrder[i];
+  if(state.currentVoterChoice === null){
+    el(`
+      <div class="panel pass-card">
+        <div class="eyebrow">Pemungutan Suara ${i+1} dari ${total}</div>
+        <div class="to">Serahkan ke ${playerName(voterIdx)}</div>
+        <div class="seal" onclick="revealVoteBooth()">🗳️</div>
+        <p class="small">Setujukah kau dengan tim yang diajukan ${playerLabel(state.leaderIndex)}?</p>
+      </div>
+    `);
+  } else {
+    el(`
+      <div class="panel">
+        <div class="eyebrow center">${playerName(voterIdx)}, tentukan suaramu</div>
+        <p class="small center" style="margin-bottom:16px;">Tim: ${state.proposedTeam.map(t=>playerLabel(t)).join(', ')}</p>
+        <div class="row">
+          <button class="btn good" onclick="castVote(true)">Setuju</button>
+          <button class="btn evil" onclick="castVote(false)">Tolak</button>
+        </div>
+      </div>
+    `);
+  }
+}
+function revealVoteBooth(){ state.currentVoterChoice = 'choosing'; renderVoteCollect(); }
+function castVote(approve){
+  const voterIdx = state.voteOrder[state.voteRevealIndex];
+  state.votes[voterIdx] = approve;
+  state.voteRevealIndex++;
+  state.currentVoterChoice = null;
+  renderVoteCollect();
+}
+function renderVoteResult(){
+  const rows = state.players.map((p,i)=>{
+    const approve = state.votes[i];
+    return `<div class="vote-row"><span>${playerLabel(i)}</span><span class="pill ${approve?'approve':'reject'}">${approve?'Setuju':'Tolak'}</span></div>`;
+  }).join('');
+  const approveCount = Object.values(state.votes).filter(v=>v).length;
+  const total = state.players.length;
+  const passed = approveCount > total/2;
+  el(`
+    <div class="hero" style="padding-bottom:6px;">
+      <div class="eyebrow">Hasil Pemungutan Suara</div>
+      <h2>${passed ? 'Tim Disetujui' : 'Tim Ditolak'}</h2>
+    </div>
+    <div class="panel">
+      <div class="vote-list">${rows}</div>
+      <p class="small center" style="margin-top:10px;">${approveCount} setuju · ${total-approveCount} tolak</p>
+      <button class="btn" style="margin-top:12px;" onclick="afterVote(${passed})">Lanjutkan</button>
+    </div>
+  `);
+}
+function afterVote(passed){
+  if(passed){
+    state.rejectCount = 0;
+    startQuestVoting();
+  } else {
+    state.rejectCount++;
+    if(state.rejectCount >= 5){
+      state.winner = 'evil';
+      state.winReason = 'Lima tim berturut-turut ditolak — Camelot jatuh dalam kekacauan.';
+      state.phase = 'end';
+      renderEnd();
+      return;
+    }
+    state.leaderIndex = (state.leaderIndex+1) % state.players.length;
+    state.phase = 'board';
+    renderBoard();
+  }
+}
+
+/* ===================== QUEST VOTING ===================== */
+function startQuestVoting(){
+  state.questVotes = {};
+  state.questVoteOrder = state.proposedTeam.slice();
+  state.questVoteRevealIndex = 0;
+  state.currentVoterChoice = null;
+  state.phase = 'quest-collect';
+  renderQuestCollect();
+}
+function renderQuestCollect(){
+  let i = state.questVoteRevealIndex;
+  const total = state.questVoteOrder.length;
+  while(i < total){
+    const voterIdx = state.questVoteOrder[i];
+    if(isBot(voterIdx)){
+      state.questVotes[voterIdx] = botQuestVoteSuccess(voterIdx);
+      i++;
+      continue;
+    }
+    break;
+  }
+  state.questVoteRevealIndex = i;
+
+  if(i >= total){
+    resolveQuest();
+    return;
+  }
+  const voterIdx = state.questVoteOrder[i];
+  const align = state.rolesFull[voterIdx].align;
+  if(state.currentVoterChoice === null){
+    el(`
+      <div class="panel pass-card">
+        <div class="eyebrow">Suara Misi ${i+1} dari ${total}</div>
+        <div class="to">Serahkan ke ${playerName(voterIdx)}</div>
+        <div class="seal" onclick="revealQuestBooth()">⚜️</div>
+        <p class="small">Suaramu akan dirahasiakan selamanya — hanya jumlahnya yang terungkap.</p>
+      </div>
+    `);
+  } else {
+    el(`
+      <div class="panel">
+        <div class="eyebrow center">${playerName(voterIdx)}, tentukan nasib misi ini</div>
+        <div class="row">
+          <button class="btn good" onclick="castQuestVote(true)">Berhasil</button>
+          ${align==='evil' ? `<button class="btn evil" onclick="castQuestVote(false)">Gagalkan</button>` : ''}
+        </div>
+        ${align!=='evil' ? '<p class="small center" style="margin-top:10px;">Sebagai pihak kebaikan, kau hanya dapat memilih Berhasil.</p>' : ''}
+      </div>
+    `);
+  }
+}
+function revealQuestBooth(){ state.currentVoterChoice = 'choosing'; renderQuestCollect(); }
+function castQuestVote(success){
+  const voterIdx = state.questVoteOrder[state.questVoteRevealIndex];
+  state.questVotes[voterIdx] = success;
+  state.questVoteRevealIndex++;
+  state.currentVoterChoice = null;
+  renderQuestCollect();
+}
+function resolveQuest(){
+  const n = state.players.length;
+  const req = QUEST_TABLE[n][state.questIndex];
+  const failCount = Object.values(state.questVotes).filter(v=>v===false).length;
+  const questFailed = failCount >= req.fails;
+  state.questResults.push(questFailed ? 'fail' : 'success');
+  state.questLog.push({ team: state.proposedTeam.slice(), result: questFailed ? 'fail' : 'success', leader: state.leaderIndex });
+  state.phase = 'quest-result';
+  renderQuestResult(failCount, questFailed);
+}
+function renderQuestResult(failCount, questFailed){
+  const total = state.questVoteOrder.length;
+  el(`
+    <div class="hero" style="padding-bottom:6px;">
+      <div class="eyebrow">Hasil Misi ${state.questIndex+1}</div>
+      <h2 style="color:${questFailed?'var(--evil-bright)':'var(--good-bright)'}">${questFailed?'Misi Digagalkan':'Misi Berhasil'}</h2>
+    </div>
+    <div class="panel center">
+      ${renderQuestTrack()}
+      <p class="small">${failCount} dari ${total} suara memilih menggagalkan misi.</p>
+      <button class="btn" style="margin-top:14px;" onclick="afterQuest()">Lanjutkan</button>
+    </div>
+  `);
+}
+function afterQuest(){
+  const successCount = state.questResults.filter(r=>r==='success').length;
+  const failCount = state.questResults.filter(r=>r==='fail').length;
+  if(failCount >= 3){
+    state.winner = 'evil';
+    state.winReason = 'Tiga misi telah digagalkan — kegelapan menguasai Camelot.';
+    state.phase = 'end';
+    renderEnd();
+    return;
+  }
+  if(successCount >= 3){
+    const hasAssassin = state.rolesFull.some(r=>r.name==='Assassin');
+    if(hasAssassin){
+      state.phase = 'assassin';
+      state.assassinRevealed = false;
+      state.assassinBotPick = null;
+      renderAssassin();
+    } else {
+      state.winner = 'good';
+      state.winReason = 'Tiga misi berhasil diselesaikan — kebaikan menang!';
+      state.phase = 'end';
+      renderEnd();
+    }
+    return;
+  }
+  state.leaderIndex = (state.leaderIndex+1) % state.players.length;
+  state.questIndex++;
+  state.rejectCount = 0;
+  state.phase = 'board';
+  renderBoard();
+}
+
+/* ===================== ASSASSIN ===================== */
+function renderAssassin(){
+  const assassinIdx = state.rolesFull.findIndex(r=>r.name==='Assassin');
+  if(isBot(assassinIdx)){
+    if(state.assassinBotPick === null){
+      state.assassinBotPick = botAssassinPick();
+      el(`
+        <div class="panel pass-card">
+          <div class="eyebrow">Kebaikan Telah Menang Tiga Misi</div>
+          <div class="to">🤖 ${playerName(assassinIdx)} (AI) sedang menimbang</div>
+          <div class="seal" onclick="revealAssassinBotResult()">🗡️</div>
+          <p class="small">Sang Assassin AI telah menetapkan sasarannya. Ketuk untuk mengungkap.</p>
+        </div>
+      `);
+    } else {
+      confirmAssassinTarget(state.assassinBotPick);
+    }
+    return;
+  }
+  if(!state.assassinRevealed){
+    el(`
+      <div class="panel pass-card">
+        <div class="eyebrow">Kebaikan Telah Menang Tiga Misi</div>
+        <div class="to">Serahkan ke ${playerName(assassinIdx)}</div>
+        <div class="seal" onclick="revealAssassinBooth()">🗡️</div>
+        <p class="small">Satu kesempatan terakhir bagi kegelapan — tebak siapa Merlin.</p>
+      </div>
+    `);
+  } else {
+    const candidates = state.rolesFull
+      .map((r,i)=>({...r,i}))
+      .filter(r=> r.align !== 'evil');
+    const list = candidates.map(c=>`
+      <div class="player-pick" onclick="confirmAssassinTarget(${c.i})">
+        <div class="box"></div> ${playerLabel(c.i)}
+      </div>
+    `).join('');
+    el(`
+      <div class="hero" style="padding-bottom:6px;">
+        <div class="eyebrow">Assassin: ${playerName(assassinIdx)}</div>
+        <h2>Siapakah Merlin?</h2>
+      </div>
+      <div class="panel">
+        <div class="player-list">${list}</div>
+      </div>
+    `);
+  }
+}
+function revealAssassinBotResult(){ renderAssassin(); }
+function revealAssassinBooth(){ state.assassinRevealed = true; renderAssassin(); }
+function confirmAssassinTarget(idx){
+  const isMerlin = state.rolesFull[idx].name === 'Merlin';
+  if(isMerlin){
+    state.winner = 'evil';
+    state.winReason = `${playerLabel(idx)} adalah Merlin — Assassin berhasil menuntaskan tugasnya.`;
+  } else {
+    state.winner = 'good';
+    state.winReason = `${playerLabel(idx)} bukan Merlin — kebaikan menang atas Camelot.`;
+  }
+  state.phase = 'end';
+  renderEnd();
+}
+
+/* ===================== END ===================== */
+function renderEnd(){
+  const rows = state.rolesFull.map((r,i)=>`
+    <div class="reveal-row ${r.align}">
+      <span class="n">${playerLabel(i)}</span>
+      <span class="r" style="color:${r.align==='good'?'var(--good-bright)':'var(--evil-bright)'}">${r.name}</span>
+    </div>
+  `).join('');
+  const isGood = state.winner==='good';
+  el(`
+    <div class="panel banner">
+      <div class="crown-big">${isGood?'👑':'🗡️'}</div>
+      <div class="eyebrow">${isGood?'Kebaikan Menang':'Kejahatan Menang'}</div>
+      <h2 style="color:${isGood?'var(--good-bright)':'var(--evil-bright)'}">${isGood?'Camelot Terselamatkan':'Camelot Jatuh'}</h2>
+      <p class="small" style="max-width:400px;margin:8px auto 0;">${state.winReason}</p>
+    </div>
+    <div class="panel" style="margin-top:16px;">
+      <div class="eyebrow">Jati Diri Para Ksatria</div>
+      <div class="reveal-all">${rows}</div>
+      <button class="btn" style="margin-top:10px;" onclick="restartGame()">Main Lagi</button>
+    </div>
+  `);
+}
+function restartGame(){
+  if(state.discussionTimer){ clearInterval(state.discussionTimer); }
+  const prevPlayers = state.players.map(p=>({name:p.name, isBot:p.isBot}));
+  state = {
+    phase: 'setup',
+    players: prevPlayers,
+    optional: { percival:false, morgana:false, mordred:false, oberon:false },
+    rolesFull: [], revealIndex:0, revealed:false, leaderIndex:0, questIndex:0,
+    questResults:[], questLog:[], rejectCount:0, proposedTeam:[], votes:{}, voteOrder:[], voteRevealIndex:0,
+    currentVoterChoice:null, questVotes:{}, questVoteOrder:[], questVoteRevealIndex:0,
+    assassinRevealed:false, assassinBotPick:null, discussionSeconds:25, discussionTimer:null,
+    chatMessages:[], winner:null, winReason:''
+  };
+  renderSetup();
+}
+
+/* ===================== BOOT ===================== */
+renderSetup();
+</script>
+</body>
+</html>
