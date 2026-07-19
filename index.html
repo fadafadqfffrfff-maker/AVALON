@@ -296,7 +296,7 @@ let state = {
   questVoteRevealIndex: 0,
   assassinRevealed: false,
   assassinBotPick: null,
-  discussionSeconds: 25,
+  discussionSeconds: 600, // Diubah ke 10 menit (600 detik)
   discussionTimer: null,
   chatMessages: [],
   winner: null,
@@ -333,11 +333,11 @@ function activateFullscreen() {
   const element = document.documentElement;
   if (element.requestFullscreen) {
     element.requestFullscreen();
-  } else if (element.mozRequestFullScreen) { /* Firefox */
+  } else if (element.mozRequestFullScreen) {
     element.mozRequestFullScreen();
-  } else if (element.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+  } else if (element.webkitRequestFullscreen) {
     element.webkitRequestFullscreen();
-  } else if (element.msRequestFullscreen) { /* IE/Edge */
+  } else if (element.msRequestFullscreen) {
     element.msRequestFullscreen();
   }
 }
@@ -478,7 +478,6 @@ function renderSetup(){
 }
 
 function beginGame(){
-  // Mengaktifkan mode layar penuh (Fullscreen) saat tombol diklik
   activateFullscreen();
 
   const n = state.players.length;
@@ -660,7 +659,6 @@ function generateBotChatMessage() {
   const selectedBot = bots[Math.floor(Math.random() * bots.length)];
   const botIdx = selectedBot.i;
   const align = state.rolesFull[botIdx].align;
-  const roleName = state.rolesFull[botIdx].name;
   
   const leaderName = playerName(state.leaderIndex);
   const onTeam = state.proposedTeam.includes(botIdx);
@@ -792,7 +790,6 @@ function openTeamSelect(){
 }
 function renderBotTeamAnnounce(){
   const n = state.players.length;
-  const size = QUEST_TABLE[n][state.questIndex].size;
   const list = state.proposedTeam.map(i=>`<div class="player-pick selected"><div class="box"></div> ${playerLabel(i)}</div>`).join('');
   el(`
     <div class="hero" style="padding-bottom:6px;">
@@ -815,7 +812,7 @@ function formatTime(s){
 function openDiscussion(){
   if(state.discussionTimer) clearInterval(state.discussionTimer);
   state.phase = 'discussion';
-  state.discussionSeconds = 25;
+  state.discussionSeconds = 600; // Mengatur waktu diskusi ke 10 menit (600 detik)
   state.chatMessages = [];
   
   generateBotChatMessage();
@@ -824,7 +821,7 @@ function openDiscussion(){
   state.discussionTimer = setInterval(()=>{
     state.discussionSeconds--;
     
-    if (state.discussionSeconds % 3 === 0 && Math.random() < 0.75) {
+    if (state.discussionSeconds % 5 === 0 && Math.random() < 0.6) {
       generateBotChatMessage();
     }
     
@@ -1098,6 +1095,7 @@ function afterQuest(){
     return;
   }
   if(successCount >= 3){
+    // Kubu baik berhasil memenangkan 3 misi, berikan pilihan membunuh Merlin ke Assassin
     const hasAssassin = state.rolesFull.some(r=>r.name==='Assassin');
     if(hasAssassin){
       state.phase = 'assassin';
@@ -1148,6 +1146,7 @@ function renderAssassin(){
       </div>
     `);
   } else {
+    // Hanya kubu baik (good) yang dijadikan kandidat target pembunuhan
     const candidates = state.rolesFull
       .map((r,i)=>({...r,i}))
       .filter(r=> r.align !== 'evil');
@@ -1173,10 +1172,10 @@ function confirmAssassinTarget(idx){
   const isMerlin = state.rolesFull[idx].name === 'Merlin';
   if(isMerlin){
     state.winner = 'evil';
-    state.winReason = `${playerLabel(idx)} adalah Merlin — Assassin berhasil menuntaskan tugasnya.`;
+    state.winReason = `${playerLabel(idx)} adalah Merlin — Assassin berhasil menuntaskan tugasnya dan membalikkan keadaan!`;
   } else {
     state.winner = 'good';
-    state.winReason = `${playerLabel(idx)} bukan Merlin — kebaikan menang atas Camelot.`;
+    state.winReason = `${playerLabel(idx)} bukan Merlin — Assassin salah target, kebaikan menang mutlak atas Camelot.`;
   }
   state.phase = 'end';
   renderEnd();
@@ -1215,7 +1214,7 @@ function restartGame(){
     rolesFull: [], revealIndex:0, revealed:false, leaderIndex:0, questIndex:0,
     questResults:[], questLog:[], rejectCount:0, proposedTeam:[], votes:{}, voteOrder:[], voteRevealIndex:0,
     currentVoterChoice:null, questVotes:{}, questVoteOrder:[], questVoteRevealIndex:0,
-    assassinRevealed:false, assassinBotPick:null, discussionSeconds:25, discussionTimer:null,
+    assassinRevealed:false, assassinBotPick:null, discussionSeconds:600, discussionTimer:null,
     chatMessages:[], winner:null, winReason:''
   };
   renderSetup();
