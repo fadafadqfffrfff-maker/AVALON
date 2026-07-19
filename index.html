@@ -328,6 +328,20 @@ function countsFor(n){
   return {good:t[n][0], evil:t[n][1]};
 }
 
+/* ===================== FULLSCREEN HELPER ===================== */
+function activateFullscreen() {
+  const element = document.documentElement;
+  if (element.requestFullscreen) {
+    element.requestFullscreen();
+  } else if (element.mozRequestFullScreen) { /* Firefox */
+    element.mozRequestFullScreen();
+  } else if (element.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+    element.webkitRequestFullscreen();
+  } else if (element.msRequestFullscreen) { /* IE/Edge */
+    element.msRequestFullscreen();
+  }
+}
+
 /* ===================== HELPERS ===================== */
 function shuffle(arr){
   const a = arr.slice();
@@ -464,6 +478,9 @@ function renderSetup(){
 }
 
 function beginGame(){
+  // Mengaktifkan mode layar penuh (Fullscreen) saat tombol diklik
+  activateFullscreen();
+
   const n = state.players.length;
   if(n<5||n>10){ alert('Jumlah pemain harus 5–10 orang.'); return; }
   for(let i=0;i<n;i++){ if(!state.players[i].name.trim()) state.players[i].name = `Pemain ${i+1}`; }
@@ -664,12 +681,10 @@ function generateBotChatMessage() {
         `Hati-hati, perhatikan siapa saja yang masuk ke dalam tim.`
       ];
     }
-    // Jika ada misi gagal sebelumnya
     if (state.questResults.includes('fail')) {
       messages.push(`Ingat kawan, jangan sampai penyusup merusak misi kita lagi!`);
     }
   } else {
-    // Pihak Jahat (Evil) mencoba menipu atau memprovokasi
     if (onTeam) {
       messages = [
         `Tenang saja, tim ini sangat aman. Saya dukung penuh!`,
@@ -688,7 +703,6 @@ function generateBotChatMessage() {
   const text = messages[Math.floor(Math.random() * messages.length)];
   state.chatMessages.push({ sender: playerLabel(botIdx), text: text, isBot: true });
   
-  // Batasi histori chat maksimal 8 baris
   if (state.chatMessages.length > 8) state.chatMessages.shift();
 }
 
@@ -801,17 +815,15 @@ function formatTime(s){
 function openDiscussion(){
   if(state.discussionTimer) clearInterval(state.discussionTimer);
   state.phase = 'discussion';
-  state.discussionSeconds = 25; // Dipercepat agar chat terasa aktif dan intens
+  state.discussionSeconds = 25;
   state.chatMessages = [];
   
-  // Trigger pesan pertama langsung saat diskusi dibuka
   generateBotChatMessage();
   renderDiscussion();
   
   state.discussionTimer = setInterval(()=>{
     state.discussionSeconds--;
     
-    // Setiap 3 detik sekali, ada probabilitas AI mengirim pesan baru ke grup
     if (state.discussionSeconds % 3 === 0 && Math.random() < 0.75) {
       generateBotChatMessage();
     }
@@ -854,7 +866,6 @@ function renderDiscussion(){
     </div>
   `);
   
-  // Auto scroll ke bawah chat box
   const box = document.getElementById('chatBox');
   if(box) box.scrollTop = box.scrollHeight;
 }
@@ -1027,7 +1038,7 @@ function renderQuestCollect(){
       <div class="panel pass-card">
         <div class="eyebrow">Suara Misi ${i+1} dari ${total}</div>
         <div class="to">Serahkan ke ${playerName(voterIdx)}</div>
-        <div class="seal" onclick="revealQuestBooth()">⚜️</div>
+        <div class="seal" onclick="revealQuestBooth()">QN</div>
         <p class="small">Suaramu akan dirahasiakan selamanya — hanya jumlahnya yang terungkap.</p>
       </div>
     `);
